@@ -4,5 +4,5 @@
 PATH="/Library/Frameworks/Python.framework/Versions/3.13/bin:${PATH}"
 export PATH
 
-eval "$(/opt/homebrew/bin/brew shellenv)"
+for b in /opt/homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew; do [ -x "$b" ] && eval "$("$b" shellenv)"; done
 export PATH="$HOME/.local/bin:$PATH"
