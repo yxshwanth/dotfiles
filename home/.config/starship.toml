@@ -119,10 +119,6 @@ success_symbol = "[\u276f](bold mauve)"
 error_symbol = "[\u276f](bold red)"
 vimcmd_symbol = "[\u276e](bold green)"
 
-
-
-
-
 # >>> ox palette (written by `ox theme`)
 [palettes.ox]
 text = "#cdd6f4"

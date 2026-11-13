@@ -37,7 +37,7 @@ theme() {
   # starship has one file: swap the marked palette block, then point at it
   local sp=~/.config/starship.toml
   sedi "$sp" '/^# >>> ox palette/,/^# <<< ox palette/d'
-  { echo; render starship.palette; } >> "$sp"
+  render starship.palette >> "$sp"   # the blank line before the block stays put, so no echo here
   sedi "$sp" 's/^palette = .*/palette = "ox"/'
 
   sedi ~/.config/btop/btop.conf 's/^color_theme = .*/color_theme = "ox"/'
