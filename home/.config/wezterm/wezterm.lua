@@ -176,7 +176,7 @@ wezterm.on("format-tab-title", function(tab, _, _, _, hover, max_width)
 end)
 
 wezterm.on("update-status", function(window, _)
-  local leader = window:leader_is_active()
+  local leader = window:active_key_table() == "leader"
   window:set_left_status(wezterm.format({
     { Foreground = { Color = leader and c.pink or c.mauve } },
     { Text = leader and " \u{f489} LEADER " or " \u{f489}  " },
@@ -188,35 +188,48 @@ wezterm.on("update-status", function(window, _)
 end)
 
 ----------------------------------------------------------------------
--- Keys: tmux-like, leader = Ctrl+a (only used when use_tmux = false)
+-- Keys: tmux-like, Ctrl+a then a key (only used when use_tmux = false)
+-- Ctrl+a goes straight through when tmux runs in the pane (dev, or tmux by hand),
+-- so the two never fight over it. That is why this is a key table and not config.leader.
 ----------------------------------------------------------------------
 if not use_tmux then
-  config.leader = { key = "a", mods = "CTRL", timeout_milliseconds = 1000 }
-
   config.keys = {
+    {
+      key = "a",
+      mods = "CTRL",
+      action = wezterm.action_callback(function(window, pane)
+        if (pane:get_foreground_process_name() or ""):find("tmux") then
+          window:perform_action(act.SendKey({ key = "a", mods = "CTRL" }), pane)
+        else
+          window:perform_action(act.ActivateKeyTable({ name = "leader", one_shot = true, timeout_milliseconds = 1000 }), pane)
+        end
+      end),
+    },
+  }
+
+  local leader = {
     -- splits
-    { key = "|", mods = "LEADER|SHIFT", action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
-    { key = "\\", mods = "LEADER", action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
-    { key = "-", mods = "LEADER", action = act.SplitVertical({ domain = "CurrentPaneDomain" }) },
+    { key = "|", mods = "SHIFT", action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
+    { key = "\\", action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
+    { key = "-", action = act.SplitVertical({ domain = "CurrentPaneDomain" }) },
 
     -- move between panes
-    { key = "h", mods = "LEADER", action = act.ActivatePaneDirection("Left") },
-    { key = "j", mods = "LEADER", action = act.ActivatePaneDirection("Down") },
-    { key = "k", mods = "LEADER", action = act.ActivatePaneDirection("Up") },
-    { key = "l", mods = "LEADER", action = act.ActivatePaneDirection("Right") },
+    { key = "h", action = act.ActivatePaneDirection("Left") },
+    { key = "j", action = act.ActivatePaneDirection("Down") },
+    { key = "k", action = act.ActivatePaneDirection("Up") },
+    { key = "l", action = act.ActivatePaneDirection("Right") },
 
     -- pane actions
-    { key = "z", mods = "LEADER", action = act.TogglePaneZoomState },
-    { key = "x", mods = "LEADER", action = act.CloseCurrentPane({ confirm = true }) },
-    { key = "r", mods = "LEADER", action = act.ActivateKeyTable({ name = "resize_pane", one_shot = false }) },
+    { key = "z", action = act.TogglePaneZoomState },
+    { key = "x", action = act.CloseCurrentPane({ confirm = true }) },
+    { key = "r", action = act.ActivateKeyTable({ name = "resize_pane", one_shot = false }) },
 
     -- tabs
-    { key = "c", mods = "LEADER", action = act.SpawnTab("CurrentPaneDomain") },
-    { key = "n", mods = "LEADER", action = act.ActivateTabRelative(1) },
-    { key = "p", mods = "LEADER", action = act.ActivateTabRelative(-1) },
+    { key = "c", action = act.SpawnTab("CurrentPaneDomain") },
+    { key = "n", action = act.ActivateTabRelative(1) },
+    { key = "p", action = act.ActivateTabRelative(-1) },
     {
       key = ",",
-      mods = "LEADER",
       action = act.PromptInputLine({
         description = "Rename tab",
         action = wezterm.action_callback(function(window, _, line)
@@ -228,18 +241,20 @@ if not use_tmux then
     },
 
     -- copy mode, command palette
-    { key = "[", mods = "LEADER", action = act.ActivateCopyMode },
-    { key = "Space", mods = "LEADER", action = act.ActivateCommandPalette },
+    { key = "[", action = act.ActivateCopyMode },
+    { key = "Space", action = act.ActivateCommandPalette },
 
     -- press Ctrl+a twice to send a real Ctrl+a to the shell
-    { key = "a", mods = "LEADER|CTRL", action = act.SendKey({ key = "a", mods = "CTRL" }) },
+    { key = "a", mods = "CTRL", action = act.SendKey({ key = "a", mods = "CTRL" }) },
+    { key = "Escape", action = "PopKeyTable" },
   }
 
   for i = 1, 9 do
-    table.insert(config.keys, { key = tostring(i), mods = "LEADER", action = act.ActivateTab(i - 1) })
+    table.insert(leader, { key = tostring(i), action = act.ActivateTab(i - 1) })
   end
 
   config.key_tables = {
+    leader = leader,
     resize_pane = {
       { key = "h", action = act.AdjustPaneSize({ "Left", 3 }) },
       { key = "j", action = act.AdjustPaneSize({ "Down", 3 }) },
