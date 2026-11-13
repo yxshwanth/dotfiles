@@ -1,0 +1,139 @@
+# ~/.config/starship.toml
+# Clean two-line prompt. Colors: the [palettes.ox] block at the bottom, written by `ox theme`.
+#
+#   ~/github/dotfiles-public  main !1 ?2                    node 20.11  3s  14:05
+#   ❯
+
+"$schema" = "https://starship.rs/config-schema.json"
+
+add_newline = true
+command_timeout = 800
+palette = "ox"
+
+format = """
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_state\
+$git_status\
+$fill\
+$nodejs\
+$bun\
+$python\
+$rust\
+$golang\
+$java\
+$cmd_duration\
+$time
+$character"""
+
+[fill]
+symbol = " "
+
+[username]
+style_user = "pink"
+style_root = "bold red"
+format = "[$user]($style)[@](overlay0)"
+show_always = false
+
+[hostname]
+ssh_only = true
+style = "pink"
+format = "[$hostname]($style) "
+
+[directory]
+style = "bold lavender"
+truncation_length = 3
+truncate_to_repo = true
+truncation_symbol = "\u2026/"
+read_only = " \uf023"
+read_only_style = "red"
+format = "[$path]($style)[$read_only]($read_only_style) "
+
+[git_branch]
+symbol = "\ue0a0 "
+style = "overlay1"
+format = "[$symbol$branch]($style) "
+
+[git_state]
+style = "yellow"
+format = '\([$state( $progress_current/$progress_total)]($style)\) '
+
+[git_status]
+style = "pink"
+format = "([$all_status$ahead_behind]($style) )"
+conflicted = "="
+ahead = "\u21e1${count}"
+behind = "\u21e3${count}"
+diverged = "\u21d5\u21e1${ahead_count}\u21e3${behind_count}"
+untracked = "?${count}"
+stashed = "\u2261"
+modified = "!${count}"
+staged = "+${count}"
+renamed = "\u00bb${count}"
+deleted = "\u2718${count}"
+
+[nodejs]
+symbol = "\ue718 "
+style = "green"
+format = "[$symbol($version)]($style) "
+
+[bun]
+style = "peach"
+format = "[$symbol($version)]($style) "
+
+[python]
+symbol = "\ue73c "
+style = "yellow"
+format = '[${symbol}${pyenv_prefix}(${version})( \($virtualenv\))]($style) '
+
+[rust]
+symbol = "\ue7a8 "
+style = "peach"
+format = "[$symbol($version)]($style) "
+
+[golang]
+symbol = "\ue627 "
+style = "sapphire"
+format = "[$symbol($version)]($style) "
+
+[java]
+symbol = "\ue738 "
+style = "red"
+format = "[$symbol($version)]($style) "
+
+[cmd_duration]
+min_time = 2000
+style = "yellow"
+format = "[\uf252 $duration]($style) "
+
+[time]
+disabled = false
+style = "overlay0"
+time_format = "%H:%M"
+format = "[$time]($style)"
+
+[character]
+success_symbol = "[\u276f](bold mauve)"
+error_symbol = "[\u276f](bold red)"
+vimcmd_symbol = "[\u276e](bold green)"
+
+
+
+
+
+# >>> ox palette (written by `ox theme`)
+[palettes.ox]
+text = "#cdd6f4"
+overlay0 = "#6c7086"
+overlay1 = "#9399b2"
+lavender = "#89b4fa"
+sapphire = "#89b4fa"
+mauve = "#cba6f7"
+pink = "#f5c2e7"
+red = "#f38ba8"
+green = "#a6e3a1"
+yellow = "#f9e2af"
+peach = "#fab387"
+# <<< ox palette

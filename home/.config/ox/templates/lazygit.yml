@@ -1,0 +1,11 @@
+gui:
+  theme:
+    activeBorderColor: ["@ACCENT@", bold]
+    inactiveBorderColor: ["@GRAY@"]
+    searchingActiveBorderColor: ["@ACCENT2@", bold]
+    optionsTextColor: ["@ACCENT2@"]
+    selectedLineBgColor: ["@BG2@"]
+    cherryPickedCommitBgColor: ["@BG3@"]
+    cherryPickedCommitFgColor: ["@ACCENT2@"]
+    unstagedChangesColor: ["@RED@"]
+    defaultFgColor: ["@FG@"]

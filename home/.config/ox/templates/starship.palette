@@ -1,0 +1,14 @@
+# >>> ox palette (written by `ox theme`)
+[palettes.ox]
+text = "@FG@"
+overlay0 = "@GRAY@"
+overlay1 = "@DIM@"
+lavender = "@ACCENT2@"
+sapphire = "@ACCENT2@"
+mauve = "@ACCENT@"
+pink = "@PURPLE@"
+red = "@RED@"
+green = "@GREEN@"
+yellow = "@YELLOW@"
+peach = "@ORANGE@"
+# <<< ox palette

@@ -1,0 +1,19 @@
+# lazygit: Gruvbox Dark Hard (tuned) + delta diffs
+gui:
+  nerdFontsVersion: "3"
+  border: rounded
+  showBottomLine: false
+  theme:
+    activeBorderColor: ["#ffc83d", bold]
+    inactiveBorderColor: ["#7c6f64"]
+    searchingActiveBorderColor: ["#9cc5c0", bold]
+    optionsTextColor: ["#9cc5c0"]
+    selectedLineBgColor: ["#3c3836"]
+    cherryPickedCommitBgColor: ["#504945"]
+    cherryPickedCommitFgColor: ["#9cc5c0"]
+    unstagedChangesColor: ["#ff5f4f"]
+    defaultFgColor: ["#f4e8c4"]
+git:
+  diffRenderers:
+    - colorArg: always
+      command: delta --dark --paging=never

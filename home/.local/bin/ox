@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+# ox [menu]            pick an action
+# ox theme [name]      switch the theme for wezterm, tmux, nvim, fzf, zsh, starship, lazygit, btop, yazi
+# ox update            brew, mise, nvim plugins, tmux plugins, yazi packages
+# ox install           languages (mise), databases (docker), tools (brew)
+# ox keys              searchable cheatsheet
+set -euo pipefail
+export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$PATH"
+
+OX="$HOME/.config/ox"
+CUR="$OX/current"
+
+step() { printf '\n\033[1m==> %s\033[0m\n' "$*"; "$@" || echo "(failed: $*)"; }
+pick() { fzf --height=100% --prompt="$1 ❯ " "${@:2}" || exit 0; }
+# sed -i on the real file: these configs are symlinks into ~/dotfiles, and BSD sed refuses symlinks
+sedi() { local f; f=$(realpath "$1"); sed -i.bak "${@:2}" "$f" && rm "$f.bak"; }
+
+# replace every @KEY@ in a template with the value from the theme file
+render() {
+  local args=() k
+  while IFS== read -r k _; do args+=(-e "s|@$k@|${!k}|g"); done < "$OX/themes/$THEME.sh"
+  sed "${args[@]}" "$OX/templates/$1"
+}
+
+theme() {
+  THEME="${1:-}"
+  [[ -n $THEME ]] || THEME=$(ls "$OX/themes" | sed 's/\.sh$//' | pick theme --preview "$0 preview {}" --preview-window=right:45%)
+  [[ -n $THEME ]] || exit 0
+  [[ -f $OX/themes/$THEME.sh ]] || { echo "no theme '$THEME' (try: $(ls "$OX/themes" | sed 's/\.sh$//' | tr '\n' ' '))" >&2; exit 1; }
+  source "$OX/themes/$THEME.sh"
+  mkdir -p "$CUR" ~/.config/btop/themes
+
+  cp "$OX/themes/$THEME.sh" "$CUR/colors.sh"   # read by tmux/cockpit.sh
+  for f in tmux.conf wezterm.lua nvim.lua lazygit.yml colors.zsh; do render "$f" > "$CUR/$f"; done
+  render btop.theme > ~/.config/btop/themes/ox.theme
+
+  # starship has one file: swap the marked palette block, then point at it
+  local sp=~/.config/starship.toml
+  sedi "$sp" '/^# >>> ox palette/,/^# <<< ox palette/d'
+  { echo; render starship.palette; } >> "$sp"
+  sedi "$sp" 's/^palette = .*/palette = "ox"/'
+
+  sedi ~/.config/btop/btop.conf 's/^color_theme = .*/color_theme = "ox"/'
+  if [[ -n $YAZI ]]; then   # yazi flavors are shipped, not generated; themes without one keep the last flavor
+    sedi ~/.config/yazi/theme.toml -E "s/^(dark|light) = .*/\1 = \"$YAZI\"/"
+  fi
+
+  echo "$THEME" > "$OX/theme"
+  tmux source-file -q "$CUR/tmux.conf" 2>/dev/null || true   # wezterm reloads itself; nvim/shells pick it up when reopened
+  echo "theme: $THEME  (open a new shell or run: exec zsh)"
+}
+
+preview() {
+  source "$OX/themes/$1.sh"
+  local k h
+  printf '\033[48;2;%d;%d;%dm\033[38;2;%d;%d;%dm  %s  \033[0m\n\n' \
+    $((16#${BG:1:2})) $((16#${BG:3:2})) $((16#${BG:5:2})) $((16#${FG:1:2})) $((16#${FG:3:2})) $((16#${FG:5:2})) "$1"
+  for k in RED ORANGE YELLOW GREEN AQUA BLUE PURPLE ACCENT ACCENT2; do
+    h="${!k}"; printf '\033[48;2;%d;%d;%dm      \033[0m %s\n' $((16#${h:1:2})) $((16#${h:3:2})) $((16#${h:5:2})) "$k"
+  done
+}
+
+update() {
+  step brew update
+  step brew upgrade
+  step brew cleanup
+  command -v mise >/dev/null && step mise upgrade
+  step nvim --headless "+Lazy! sync" +qa
+  [[ -x ~/.config/tmux/plugins/tpm/bin/update_plugins ]] && step ~/.config/tmux/plugins/tpm/bin/update_plugins all
+  command -v ya >/dev/null && step ya pkg upgrade
+  return 0
+}
+
+db() {
+  local img port env=()
+  case $1 in
+    postgres) img=postgres; port=5432; env=(-e POSTGRES_HOST_AUTH_METHOD=trust) ;;   # ponytail: no password, localhost only
+    mysql)    img=mysql;    port=3306; env=(-e MYSQL_ALLOW_EMPTY_PASSWORD=yes) ;;
+    redis)    img=redis;    port=6379 ;;
+  esac
+  docker run -d --restart unless-stopped --name "$1" -p "127.0.0.1:$port:$port" ${env[@]+"${env[@]}"} "$img"
+}
+
+install() {
+  local choice
+  choice=$(printf '%s\n' "lang  node" "lang  python" "lang  ruby" "lang  go" "lang  rust" "lang  elixir" "lang  java" "lang  php" \
+    "db    postgres" "db    mysql" "db    redis" "tool  mise" "tool  lazydocker" | pick install)
+  case ${choice%% *} in
+    lang) command -v mise >/dev/null || step brew install mise; step mise use -g "${choice##* }@latest" ;;
+    db)   db "${choice##* }" ;;
+    tool) step brew install "${choice##* }" ;;
+  esac
+}
+
+menu() {
+  case $(printf '%s\n' Theme Projects Keys Install Update "System info" | pick ox) in
+    Theme) theme ;;
+    Projects) exec dev -p ;;
+    Keys) keys ;;
+    Install) install ;;
+    Update) update; read -rsn1 -p $'\ndone, press any key' ;;
+    "System info") fastfetch; read -rsn1 ;;
+  esac
+}
+
+keys() { pick keys --no-sort < "$OX/keys.txt" >/dev/null; }
+
+case ${1:-menu} in
+  menu) menu ;;
+  theme) theme "${2:-}" ;;
+  preview) preview "$2" ;;
+  update) update ;;
+  install) install ;;
+  keys) keys ;;
+  *) sed -n '2,6p' "$0" | sed 's/^# //' ;;
+esac

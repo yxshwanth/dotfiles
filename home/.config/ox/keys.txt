@@ -1,0 +1,36 @@
+tmux      Ctrl+a                  prefix
+tmux      prefix Space            ox menu (theme, install, update, projects)
+tmux      prefix ?                this cheatsheet
+tmux      prefix |  or  \         split right (same folder)
+tmux      prefix -                split down (same folder)
+tmux      prefix c                new window (same folder)
+tmux      prefix x                kill pane
+tmux      prefix h j k l          move between panes
+tmux      prefix H J K L          resize panes (repeatable)
+tmux      Ctrl+h j k l            move between panes and Neovim splits, no prefix
+tmux      prefix Ctrl+l           clear screen
+tmux      prefix [                copy mode (v select, y copy)
+tmux      prefix g                lazygit popup
+tmux      prefix y                yazi popup
+tmux      prefix b                btop popup
+tmux      prefix o                pick a project and open the dev layout
+tmux      prefix f                fuzzy switch session
+tmux      prefix s                session tree
+tmux      prefix R                reload tmux config
+tmux      prefix I  /  U          install / update tmux plugins
+shell     Ctrl+r                  search history
+shell     Ctrl+t                  find a file and paste its path
+shell     Option+c                fuzzy cd into a folder
+shell     Tab                     fuzzy completion menu
+shell     Ctrl+Space              accept the whole grey suggestion
+shell     Option+f                accept the next word of the suggestion
+shell     z <part>                jump to a folder you have visited
+shell     y                       yazi, and cd to where you quit
+shell     lg                      lazygit
+shell     ls ll la lt             eza listings (tree with lt)
+shell     dev [folder]            nvim + claude + shell layout in its own session
+shell     dev -p                  pick a project to open
+ox        ox theme [name]         switch the theme everywhere
+ox        ox update               brew, mise, nvim and tmux plugins, yazi
+ox        ox install              languages, databases, tools
+ox        ox keys                 this cheatsheet

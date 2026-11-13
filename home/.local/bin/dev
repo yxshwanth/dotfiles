@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# dev [folder]   open a project layout in its own tmux session
+# dev -p         pick a project from folders you have visited (zoxide)
+#
+#   +----------------+-------------+
+#   |                |  claude     |
+#   |     nvim       +-------------+
+#   |                |  shell      |
+#   +----------------+-------------+
+set -euo pipefail
+export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$PATH"
+
+if [[ "${1:-}" == "-p" ]]; then
+  dir="$(zoxide query -l 2>/dev/null | fzf --height=100% --prompt='project ❯ ' \
+        --preview 'eza --tree --level=1 --icons=always --color=always {}')" || exit 0
+else
+  dir="${1:-$PWD}"
+fi
+dir="$(cd "$dir" && pwd)"
+name="$(basename "$dir" | tr '.: ' '___')"
+
+if ! tmux has-session -t "=$name" 2>/dev/null; then
+  tmux new-session -d -s "$name" -c "$dir" -n code
+  tmux split-window -h -t "$name:code" -c "$dir" -l 40%
+  tmux split-window -v -t "$name:code.2" -c "$dir" -l 35%
+  tmux send-keys -t "$name:code.1" "nvim" C-m
+  if command -v claude >/dev/null; then
+    tmux send-keys -t "$name:code.2" "claude" C-m
+  fi
+  tmux select-pane -t "$name:code.1"
+fi
+
+if [[ -n "${TMUX:-}" ]]; then
+  tmux switch-client -t "$name"
+else
+  tmux attach -t "$name"
+fi
